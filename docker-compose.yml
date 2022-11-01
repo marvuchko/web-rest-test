@@ -1,0 +1,49 @@
+
+version: '3.7'
+
+services:
+
+  web-rest-test-db:
+    container_name: web-rest-test-db-container
+    image: postgres:10.5
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+    volumes:
+      - web-rest-test-db-volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=web-rest-test-password
+      - POSTGRES_USER=web-rest-test-user
+      - POSTGRES_DB=web-rest-test-database
+    restart: unless-stopped
+    networks:
+      - web-rest-test-network
+
+
+  web-rest-test:
+    container_name: web-rest-test-container
+    build:
+      context: .
+    image: web-rest-test-image:1.0
+    expose:
+      - 8080
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://web-rest-test-db:5432/web-rest-test-database?currentSchema=public
+      - SPRING_DATASOURCE_USERNAME=web-rest-test-user
+      - SPRING_DATASOURCE_PASSWORD=web-rest-test-password
+    depends_on:
+      - web-rest-test-db
+    links:
+      - web-rest-test-db
+    networks:
+      - web-rest-test-network
+
+volumes:
+  web-rest-test-db-volume:
+
+networks:
+  web-rest-test-network:
+    driver: bridge
